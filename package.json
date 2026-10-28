@@ -2,8 +2,11 @@
   "name": "employee-management",
   "version": "1.0.0",
   "description": "Full Stack Employee Management System (Angular + Node.js Express + MongoDB Atlas)",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
-    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:frontend": "cd frontend && npm install --include=dev && npm run build",
     "build:backend": "cd backend && npm install",
     "build": "npm run build:frontend && npm run build:backend",
     "start": "cd backend && node server.js"
