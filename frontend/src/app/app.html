@@ -1,0 +1,249 @@
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-icon">E</span>
+      <span>People<span class="brand-light">Desk</span></span>
+    </a>
+    <span class="topbar-label">EMPLOYEE ADMINISTRATION</span>
+  </header>
+
+  <main class="main-content">
+    <section class="page-heading">
+      <div>
+        <p class="eyebrow">WORKSPACE / PEOPLE</p>
+        <h1>Employee Management</h1>
+        <p class="subtitle">
+          Manage your team, employee details and records in one place.
+        </p>
+      </div>
+
+      <button class="primary-button" (click)="openAddForm()">
+        <span>＋</span> Add employee
+      </button>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card">
+        <span class="stat-label">TOTAL EMPLOYEES</span>
+        <strong>{{ employees.length }}</strong>
+        <span class="stat-note">Registered employees</span>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">DEPARTMENTS</span>
+        <strong>{{ getDepartmentCount() }}</strong>
+        <span class="stat-note">Unique departments</span>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">TOTAL MONTHLY PAYROLL</span>
+        <strong>{{ totalSalary | currency:'INR':'symbol':'1.0-0' }}</strong>
+        <span class="stat-note">Based on listed salaries</span>
+      </article>
+    </section>
+
+    @if (errorMessage) {
+      <div class="alert error-alert">{{ errorMessage }}</div>
+    }
+
+    @if (successMessage) {
+      <div class="alert success-alert">{{ successMessage }}</div>
+    }
+
+    <section class="table-card">
+      <div class="table-heading">
+        <div>
+          <h2>All employees</h2>
+          <p>View and manage employee information.</p>
+        </div>
+
+        <input
+          class="search-input"
+          type="search"
+          placeholder="Search name, email, department..."
+          [(ngModel)]="searchText"
+          aria-label="Search employees"
+        />
+      </div>
+
+      @if (loading) {
+        <div class="empty-state">Loading employees...</div>
+      } @else if (filteredEmployees.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">◎</div>
+          <h3>No employees found</h3>
+          <p>
+            {{ searchText ? 'Try another search.' : 'Add your first employee to get started.' }}
+          </p>
+          @if (!searchText) {
+            <button class="primary-button" (click)="openAddForm()">
+              Add your first employee
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>EMPLOYEE</th>
+                <th>DEPARTMENT</th>
+                <th>POSITION</th>
+                <th>SALARY / MONTH</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (employee of filteredEmployees; track employee._id) {
+                <tr>
+                  <td>
+                    <div class="employee-cell">
+                      <span class="avatar">
+                        {{ employee.name.charAt(0).toUpperCase() }}
+                      </span>
+                      <div>
+                        <strong>{{ employee.name }}</strong>
+                        <small>{{ employee.email }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="department-pill">
+                      {{ employee.department }}
+                    </span>
+                  </td>
+                  <td>{{ employee.position }}</td>
+                  <td class="salary">
+                    {{ employee.salary | currency:'INR':'symbol':'1.0-0' }}
+                  </td>
+                  <td>
+                    <div class="actions">
+                      <button
+                        class="icon-button edit-button"
+                        (click)="openEditForm(employee)"
+                        [attr.aria-label]="'Edit ' + employee.name"
+                        title="Edit employee"
+                      >Edit</button>
+                      <button
+                        class="icon-button delete-button"
+                        (click)="deleteEmployee(employee)"
+                        [attr.aria-label]="'Delete ' + employee.name"
+                        title="Delete employee"
+                      >Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <footer class="page-footer">
+      Employee Management System <span>·</span> Angular + Node.js + MongoDB
+    </footer>
+  </main>
+</div>
+
+@if (showForm) {
+  <div class="modal-backdrop" (click)="closeForm()">
+    <section
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="form-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">EMPLOYEE DETAILS</p>
+          <h2 id="form-title">
+            {{ editingId ? 'Edit employee' : 'Add new employee' }}
+          </h2>
+          <p class="subtitle">Enter the employee's information below.</p>
+        </div>
+        <button class="close-button" (click)="closeForm()" aria-label="Close form">×</button>
+      </div>
+
+      <form #employeeForm="ngForm" (ngSubmit)="saveEmployee()">
+        <div class="form-grid">
+          <label>
+            Full name
+            <input
+              name="name"
+              [(ngModel)]="form.name"
+              required
+              minlength="2"
+              placeholder="e.g. Priya Sharma"
+            />
+          </label>
+
+          <label>
+            Email address
+            <input
+              name="email"
+              type="email"
+              [(ngModel)]="form.email"
+              required
+              email
+              placeholder="priya@example.com"
+            />
+          </label>
+
+          <label>
+            Department
+            <select name="department" [(ngModel)]="form.department" required>
+              <option value="" disabled>Select department</option>
+              <option>Engineering</option>
+              <option>Human Resources</option>
+              <option>Finance</option>
+              <option>Marketing</option>
+              <option>Sales</option>
+              <option>Operations</option>
+            </select>
+          </label>
+
+          <label>
+            Job position
+            <input
+              name="position"
+              [(ngModel)]="form.position"
+              required
+              placeholder="e.g. Software Developer"
+            />
+          </label>
+
+          <label class="full-width">
+            Monthly salary (₹)
+            <input
+              name="salary"
+              type="number"
+              [(ngModel)]="form.salary"
+              required
+              min="0"
+              step="1"
+            />
+          </label>
+        </div>
+
+        @if (errorMessage) {
+          <div class="alert error-alert">{{ errorMessage }}</div>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="secondary-button" (click)="closeForm()">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="primary-button"
+            [disabled]="employeeForm.invalid || saving"
+          >
+            {{ saving ? 'Saving...' : (editingId ? 'Save changes' : 'Create employee') }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}
